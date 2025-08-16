@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, Mail, Loader2, Edit3, Send, Settings } from 'lucide-react';
+import { Upload, FileText, Mail, Loader2, Edit3, Send } from 'lucide-react';
 
 const MeetingSummarizer = () => {
   const [transcript, setTranscript] = useState('');
@@ -10,29 +10,23 @@ const MeetingSummarizer = () => {
   const [emailRecipients, setEmailRecipients] = useState('');
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [notification, setNotification] = useState('');
-  const [showEmailConfig, setShowEmailConfig] = useState(false);
   
-  // Email configuration state
+  // Email configuration state - hardcoded for production
+  // TODO: Replace these placeholder values with your actual EmailJS credentials
+  // Get these from: https://www.emailjs.com/
   const [emailConfig, setEmailConfig] = useState({
-    serviceId: '',
-    templateId: '',
-    publicKey: '',
-    configured: false
+    serviceId: 'service_xxxxxxx', // Replace with your actual EmailJS service ID
+    templateId: 'template_xxxxxxx', // Replace with your actual EmailJS template ID
+    publicKey: 'xxxxxxxxxxxxxxx', // Replace with your actual EmailJS public key
+    configured: true
   });
 
-  // Load email config from localStorage on component mount
+  // Initialize EmailJS on component mount
   useEffect(() => {
-    const savedConfig = localStorage.getItem('emailjs-config');
-    if (savedConfig) {
-      const config = JSON.parse(savedConfig);
-      setEmailConfig({...config, configured: !!(config.serviceId && config.templateId && config.publicKey)});
-      
-      // Initialize EmailJS if config is complete
-      if (config.serviceId && config.templateId && config.publicKey && window.emailjs) {
-        window.emailjs.init({ publicKey: config.publicKey });
-      }
+    if (window.emailjs && emailConfig.publicKey) {
+      window.emailjs.init({ publicKey: emailConfig.publicKey });
     }
-  }, []);
+  }, [emailConfig.publicKey]);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -88,25 +82,7 @@ const MeetingSummarizer = () => {
     }
   };
 
-  const saveEmailConfig = () => {
-    const config = {
-      serviceId: emailConfig.serviceId,
-      templateId: emailConfig.templateId,
-      publicKey: emailConfig.publicKey
-    };
-    
-    localStorage.setItem('emailjs-config', JSON.stringify(config));
-    setEmailConfig({...config, configured: !!(config.serviceId && config.templateId && config.publicKey)});
-    
-    // Initialize EmailJS
-    if (config.publicKey && window.emailjs) {
-      window.emailjs.init({ publicKey: config.publicKey });
-    }
-    
-    setShowEmailConfig(false);
-    setNotification('Email configuration saved successfully!');
-    setTimeout(() => setNotification(''), 3000);
-  };
+
 
   const sendEmail = async () => {
     if (!emailRecipients.trim() || !summary.trim()) {
@@ -115,12 +91,7 @@ const MeetingSummarizer = () => {
       return;
     }
 
-    if (!emailConfig.configured) {
-      setNotification('Please configure email settings first');
-      setShowEmailConfig(true);
-      setTimeout(() => setNotification(''), 3000);
-      return;
-    }
+
 
     if (!window.emailjs) {
       setNotification('EmailJS not loaded. Please refresh the page.');
@@ -183,66 +154,7 @@ const MeetingSummarizer = () => {
           </div>
         )}
 
-        {/* Email Configuration Modal */}
-        {showEmailConfig && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold mb-4">Email Configuration</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    EmailJS Service ID
-                  </label>
-                  <input
-                    type="text"
-                    value={emailConfig.serviceId}
-                    onChange={(e) => setEmailConfig({...emailConfig, serviceId: e.target.value})}
-                    placeholder="service_xxxxxxx"
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    EmailJS Template ID
-                  </label>
-                  <input
-                    type="text"
-                    value={emailConfig.templateId}
-                    onChange={(e) => setEmailConfig({...emailConfig, templateId: e.target.value})}
-                    placeholder="template_xxxxxxx"
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    EmailJS Public Key
-                  </label>
-                  <input
-                    type="text"
-                    value={emailConfig.publicKey}
-                    onChange={(e) => setEmailConfig({...emailConfig, publicKey: e.target.value})}
-                    placeholder="xxxxxxxxxxxxxxx"
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={saveEmailConfig}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                  >
-                    Save Configuration
-                  </button>
-                  <button
-                    onClick={() => setShowEmailConfig(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Step 1: Upload Transcript */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -336,31 +248,15 @@ const MeetingSummarizer = () => {
                 <Mail className="w-5 h-5 mr-2 text-orange-600" />
                 <h2 className="text-xl font-semibold">Step 4: Share Summary</h2>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowEmailConfig(true)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  {emailConfig.configured ? 'Email Settings' : 'Configure Email'}
-                </button>
-                <button
-                  onClick={() => setShowEmailForm(!showEmailForm)}
-                  disabled={!emailConfig.configured}
-                  className="bg-orange-600 text-white px-6 py-2 rounded-md hover:bg-orange-700 disabled:bg-gray-400"
-                >
-                  {showEmailForm ? 'Hide Email Form' : 'Share via Email'}
-                </button>
-              </div>
+                           <button
+               onClick={() => setShowEmailForm(!showEmailForm)}
+               className="bg-orange-600 text-white px-6 py-2 rounded-md hover:bg-orange-700"
+             >
+               {showEmailForm ? 'Hide Email Form' : 'Share via Email'}
+             </button>
             </div>
 
-            {!emailConfig.configured && (
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-                Please configure your email settings first to send summaries.
-              </div>
-            )}
-
-            {showEmailForm && emailConfig.configured && (
+                         {showEmailForm && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email Recipients (comma-separated)
