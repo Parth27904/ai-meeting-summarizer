@@ -15,9 +15,9 @@ const MeetingSummarizer = () => {
   // TODO: Replace these placeholder values with your actual EmailJS credentials
   // Get these from: https://www.emailjs.com/
   const [emailConfig, setEmailConfig] = useState({
-    serviceId: 'service_xxxxxxx', // Replace with your actual EmailJS service ID
-    templateId: 'template_xxxxxxx', // Replace with your actual EmailJS template ID
-    publicKey: 'xxxxxxxxxxxxxxx', // Replace with your actual EmailJS public key
+    serviceId: 'service_39zqd2g', // Replace with your actual EmailJS service ID
+    templateId: 'template_j4wkugm', // Replace with your actual EmailJS template ID
+    publicKey: 'iZQf03puknlaMPQeG', // Replace with your actual EmailJS public key
     configured: true
   });
 
